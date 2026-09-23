@@ -179,6 +179,22 @@ a,button,.card,.tile,summary{cursor:pointer}
 .faq details[open] summary::after{transform:rotate(45deg)}
 .faq details p{color:var(--muted);padding-bottom:18px;margin:0}
 
+/* real logo image */
+.brand img{height:46px;width:auto;flex:0 0 auto}
+.foot .fbrand img{height:44px;width:auto}
+
+/* footer icon row */
+.social{display:flex;flex-wrap:wrap;gap:12px}
+.social a,.social span{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:inline-flex;align-items:center;justify-content:center;transition:.2s}
+.social svg{width:21px;height:21px}
+.social a:hover{background:var(--orange);color:#3a2600;transform:translateY(-2px)}
+.social .soon{opacity:.55;cursor:default}
+
+/* crops: keep faces in frame */
+.gallery img{object-position:50% 30%}
+.gallery.tall img{aspect-ratio:3/4}
+.card-img,.tile .tbg{background-position:center 40%}
+
 /* responsive */
 @media(max-width:900px){
   .feature-row,.cards,.tiles,.team-row,.foot-grid,.why{grid-template-columns:1fr 1fr}
@@ -194,7 +210,7 @@ a,button,.card,.tile,summary{cursor:pointer}
   .nav-links a{padding:13px 0;border-bottom:1px solid var(--line);width:100%}
   .nav{gap:10px;height:68px}
   .nav-links{inset:68px 0 auto 0}
-  .brand{font-size:1.15rem;white-space:nowrap}.brand svg{width:36px;height:36px;flex-basis:36px}
+  .brand{font-size:1.15rem;white-space:nowrap}.brand img{height:38px}
   .lang{display:none}
   .nav-right{order:2;margin-left:auto}
   .nav-right .btn{padding:8px 14px!important;font-size:.85rem;white-space:nowrap}

@@ -12,6 +12,21 @@ TRIP_TOURS = "https://clubok.travel/tours/4482"
 TRIP_GUIDE = "https://clubok.travel/guides/2870"
 e = html.escape
 
+# ---- footer contact icons (brand marks from Simple Icons; Instagram has no link yet by request) ----
+import re as _re
+def _brand(name):
+    svg = open(os.path.join(ROOT, "assets/img/icons", name + ".svg")).read()
+    return _re.sub(r"<title>.*?</title>", "", svg).replace('<svg ', '<svg fill="currentColor" aria-hidden="true" ')
+_MAIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>'
+_STAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>'
+SOCIAL = ('<div class="social">'
+  f'<a href="mailto:{EMAIL}" aria-label="Email us" title="Email: {EMAIL}">{_MAIL}</a>'
+  f'<a href="{TG}" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram: @AhunjanovMahmut">{_brand("telegram")}</a>'
+  f'<a href="{VK}" target="_blank" rel="noopener" aria-label="VK" title="VK">{_brand("vk")}</a>'
+  f'<span class="soon" role="img" aria-label="Instagram (coming soon)" title="Instagram — coming soon">{_brand("instagram")}</span>'
+  f'<a href="{TRIP_TOURS}" target="_blank" rel="noopener" aria-label="Reviews on Tripster" title="Our reviews on Tripster">{_STAR}</a>'
+  '</div>')
+
 LOGO = """<svg viewBox="0 0 64 48" aria-hidden="true"><ellipse cx="32" cy="24" rx="30" ry="22" fill="#1a5f6e"/>
 <ellipse cx="32" cy="24" rx="25" ry="18" fill="none" stroke="#2ecfb8" stroke-width="2"/>
 <g fill="#f5a623">%s</g><circle cx="32" cy="24" r="7" fill="#e8503a"/><circle cx="32" cy="24" r="3.2" fill="#fafaf5"/></svg>""" % "".join(
@@ -37,19 +52,19 @@ def page(path, title, desc, body, active=""):
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:image" content="{SITE}/assets/img/pool/px-samarkand1.jpg"><meta property="og:url" content="{SITE}/{path}">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="{r}assets/img/logo.svg" type="image/svg+xml">
+<link rel="icon" href="{r}assets/img/favicon.png" type="image/png"><link rel="apple-touch-icon" href="{r}assets/img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{r}assets/css/style.css"></head><body>
 <header class="site-head"><div class="wrap nav">
- <a class="brand" href="{r}">{LOGO}<span>Uzbek Travel</span></a>
+ <a class="brand" href="{r}"><img src="{r}assets/img/logo.png" alt="Uzbek Travel logo" width="38" height="46"><span>Uzbek Travel</span></a>
  <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
  <nav class="nav-links">{navhtml}</nav>
  <div class="nav-right"><div class="lang"><a class="on" href="{r}">EN</a><span title="Russian version coming soon">RU</span><span title="Spanish version coming soon">ES</span></div>
  <a class="btn btn-orange" href="{r}contact/" style="padding:10px 20px">Book Now</a></div>
 </div></header>"""
     foot = f"""<footer class="foot"><div class="wrap foot-grid">
- <div><div class="fbrand">{LOGO}Uzbek Travel</div><p>uzgbektravel.com<br>Tashkent, Uzbekistan</p>
+ <div><div class="fbrand"><img src="{r}assets/img/logo.png" alt="" width="36" height="44">Uzbek Travel</div><p>uzgbektravel.com<br>Tashkent, Uzbekistan</p>
  <p style="margin-top:14px"><b style="color:#fff">EN</b> &nbsp;|&nbsp; RU &nbsp;|&nbsp; ES</p></div>
  <div><h4>Quick Links</h4><ul>{"".join(f'<li><a href="{r}{h}">{n}</a></li>' for n, h in NAV)}</ul></div>
  <div><h4>Our Tours</h4><ul>
@@ -57,10 +72,7 @@ def page(path, title, desc, body, active=""):
   <li><a href="{r}tours/bostanlyk/">Bostanlyk: Mountains &amp; Ancient Legends</a></li>
   <li><a href="{r}tours/tashkent-bukhara/">Tashkent to Bukhara</a></li>
   <li><a href="{r}tours/custom/">Custom &amp; Private Tours</a></li></ul></div>
- <div><h4>Contact</h4><ul><li><a href="mailto:{EMAIL}">{EMAIL}</a></li>
-  <li><a href="{TG}" target="_blank" rel="noopener">Telegram: @AhunjanovMahmut</a></li>
-  <li><a href="{VK}" target="_blank" rel="noopener">VK</a></li>
-  <li><a href="{TRIP_TOURS}" target="_blank" rel="noopener">Also on Tripster</a> and Sputnik</li></ul></div>
+ <div><h4>Contact</h4>{SOCIAL}</div>
 </div><div class="foot-bottom">&copy; 2026 Uzbek Travel. All rights reserved.</div></footer>
 <script src="{r}assets/js/main.js"></script></body></html>"""
     out = os.path.join(ROOT, path, "index.html")
@@ -71,8 +83,8 @@ def page(path, title, desc, body, active=""):
 def img(n):  # ints = client's own photos (zero-padded), strings = Pexels landmark shots ("registan3" -> px-registan3.jpg)
     return "{R}assets/img/pool/%s.jpg" % (("%02d" % n) if isinstance(n, int) else "px-" + n)
 
-def hero(title, sub, pic):
-    return f'<section class="page-hero" style="background-image:url(\'{img(pic)}\')"><div class="wrap"><h1>{title}</h1><p>{sub}</p></div></section>'
+def hero(title, sub, pic, pos="center"):
+    return f'<section class="page-hero" style="background-image:url(\'{img(pic)}\');background-position:{pos}"><div class="wrap"><h1>{title}</h1><p>{sub}</p></div></section>'
 
 def tour_card(slug, title, meta, desc, pic, cat=""):
     return f"""<a class="card" href="{{R}}tours/{slug}/" data-cat="{cat}"><div class="card-img" style="background-image:url('{img(pic)}')"></div>
@@ -110,8 +122,18 @@ def avatar(g, size_cls="avatar"):
         return f'<img class="{size_cls}" src="{{R}}assets/img/guides/mahmut.jpg" alt="{name}, guide at Uzbek Travel">'
     return f'<img class="{size_cls}" src="{{R}}assets/img/guides/{slug}.svg" alt="{name}, guide at Uzbek Travel">'
 
-TOUR_OPTIONS = [("parkent", "Parkent: Golden Sun &amp; Wine Stories (7 hours, from €104)"),
-                ("bostanlyk", "Bostanlyk: Mountains &amp; Ancient Legends (9 hours, from $66 per person)"),
+# v2: real portraits for all four guides (from client's "Guides profiles" doc, Sep 2026)
+GUIDES = [
+ ("mahmud", "Mahmud", "Founder &amp; Guide", "21 years guiding. Born and raised in Tashkent — food, culture and the Silk Road cities.", "mahmut", ""),
+ ("sarvinoz", "Sarvinoz", "Guide", "From Tashkent to Samarkand, Bukhara, Kokand and the Tian Shan.", "sarvinoz", ""),
+ ("konstantin", "Konstantin", "Guide", "Classic Silk Road routes — and the hidden corners off the beaten path.", "konstantin", ""),
+ ("elena", "Elena", "Mountain Guide &amp; Ski Instructor", "Snowy passes, forested slopes and canyons of the Western Tian Shan.", "elena", ""),
+]
+def avatar(g, size_cls="avatar"):
+    return f'<img class="{size_cls}" src="{{R}}assets/img/guides/{g[4]}.jpg" alt="{g[1]}, {g[2].replace("&amp;","&")} at Uzbek Travel" loading="lazy">'
+
+TOUR_OPTIONS = [("parkent", "Parkent: Golden Sun &amp; Wine Stories (7 hours, from €104 / $119)"),
+                ("bostanlyk", "Bostanlyk: Mountains &amp; Ancient Legends (9 hours, from $66 / €58 per person)"),
                 ("tashkent-bukhara", "Tashkent to Bukhara: Multi-Day Tour (price on request)"),
                 ("custom", "Custom / Private Tour (price on request)")]
 
@@ -119,7 +141,7 @@ TOUR_OPTIONS = [("parkent", "Parkent: Golden Sun &amp; Wine Stories (7 hours, fr
 # Most U.S. travelers have never considered Uzbekistan -> sell the country (why / safe / easy / cost) before the tours.
 CHK = '<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>'
 TRUST = '<div class="trust"><div class="wrap">' + "".join(f"<span>{CHK}{t}</span>" for t in [
-    "Visa-free for U.S. citizens (up to 30 days)", "Safe &amp; famously welcoming", "English-speaking local guides", "We reply within 24 hours"]) + "</div></div>"
+    "Visa-free for U.S. citizens (up to 30 days)", "Safe &amp; famously welcoming", "English-speaking local guides", "Rated 5★ on Tripster (12 reviews)", "We reply within 24 hours"]) + "</div></div>"
 WHY = [
  ("2,500+","Years of Silk Road history","Samarkand is roughly as old as Rome. For centuries, caravans carried silk, spices and ideas between China and Europe through these very cities."),
  ("4","UNESCO World Heritage cities","Samarkand, Bukhara, Khiva and Shakhrisabz are living cities you walk through — not ruins behind a rope."),
@@ -161,8 +183,8 @@ home = f"""
 
 <section class="section"><div class="wrap"><div class="center"><div class="eyebrow">Handpicked routes</div><h2>Our Tours</h2></div>
 <div class="cards" style="margin-top:34px">
-{tour_card("parkent","Parkent — Golden Sun &amp; Wine Stories","7 hours · Private · From €104 (~$115)","A day in the mountains: a solar research complex, a sacred mosque at 1,500m, wine tasting, and a proper mountain lunch.",26)}
-{tour_card("bostanlyk","Bostanlyk — Mountains &amp; Ancient Legends","9 hours · Group · From $66 pp","Ancient petroglyphs, a cable car, waterfalls, Zoroastrian burial sites, and lunch at a traditional teahouse by the reservoir.",24)}
+{tour_card("parkent","Parkent — Golden Sun &amp; Wine Stories","7 hours · Private · From €104 / $119","A day in the mountains: a solar research complex, a sacred mosque at 1,500m, wine tasting, and a proper mountain lunch.",26)}
+{tour_card("bostanlyk","Bostanlyk — Mountains &amp; Ancient Legends","9 hours · Group · From $66 / €58 pp","Ancient petroglyphs, a cable car, waterfalls, Zoroastrian burial sites, and lunch at a traditional teahouse by the reservoir.",24)}
 {tour_card("tashkent-bukhara","Tashkent to Bukhara — The Full Uzbekistan","Multi-day · Private · Price on request","Tashkent, Samarkand, and Bukhara with a professional guide, comfortable transport, and curated restaurants and stays.","registan3")}
 </div><div class="center" style="margin-top:34px"><a class="btn btn-outline" href="{{R}}tours/">View All Tours Including Custom &amp; Private</a></div></div></section>
 
@@ -211,8 +233,8 @@ tours = hero("Our Tours", "From half-day excursions near Tashkent to multi-day j
  <button data-filter="culture">Culture &amp; History</button><button data-filter="food">Food &amp; Wine</button>
  <button data-filter="multiday">Multi-Day</button><button data-filter="custom">Custom &amp; Private</button></div>
 <div class="cards">
-{tour_card("parkent","Parkent — Golden Sun &amp; Wine Stories","7 hours · Private · From €104","A solar furnace, a sacred mosque at 1,500m, a family winery, and a proper mountain lunch.",26,"nature food")}
-{tour_card("bostanlyk","Bostanlyk — Mountains &amp; Ancient Legends","9 hours · Group · From $66 pp","8,000-year-old petroglyphs, a cable car, Charvak Reservoir and the Nanay waterfalls.",24,"nature culture")}
+{tour_card("parkent","Parkent — Golden Sun &amp; Wine Stories","7 hours · Private · From €104 / $119","A solar furnace, a sacred mosque at 1,500m, a family winery, and a proper mountain lunch.",26,"nature food")}
+{tour_card("bostanlyk","Bostanlyk — Mountains &amp; Ancient Legends","9 hours · Group · From $66 / €58 pp","8,000-year-old petroglyphs, a cable car, Charvak Reservoir and the Nanay waterfalls.",24,"nature culture")}
 {tour_card("tashkent-bukhara","Tashkent to Bukhara — The Full Uzbekistan","5–7 days · Private · Price on request","The classic Silk Road journey through three extraordinary cities, with one guide throughout.","registan3","culture multiday")}
 {tour_card("custom","Custom &amp; Private Tours","Any length · Private · Quote in 24h","Food days, photography, wine routes, ceramics, skiing — built around what you love.",20,"custom food nature culture")}
 </div></div></section>{cta_band()}"""
@@ -224,9 +246,9 @@ BOOK = "22% prepayment, remainder on the day. Free cancellation up to 48 hours b
 parkent = hero("Parkent — Golden Sun &amp; Wine Stories", "Uzbekistan has its own little France out here — and most visitors have no idea it exists.", 26) + f"""
 <section class="section"><div class="wrap prose">
 {facts([("Location","Tashkent Region, Parkent District"),("Duration","7 hours"),("Format","Private tour — 1 to 10 people"),
- ("Transport","Sedan (1–4 people) or minibus (up to 10), air-conditioned"),("Price","€104 for 1–3 people · €30 per person for 4–10 people"),
+ ("Transport","Sedan (1–4 people) or minibus (up to 10), air-conditioned"),("Price","€104 / $119 for 1–3 people · €30 / $34 per person for 4–10 people"),
  ("Children","Welcome"),("Languages","English, Russian, Spanish"),("Booking",BOOK)])}
-<p class="form-note" style="margin-top:-8px">€104 is about $115 USD; €30 is about $33 USD (approximate — exact amount depends on the exchange rate).</p>
+<p class="form-note" style="margin-top:-8px">Dollar prices are approximate (€1 ≈ $1.15); the exact amount follows the exchange rate on the day.</p>
 <h2>What This Tour Is</h2>
 <p>A full-day car and walking tour into the mountains of Parkent, one of the most underrated corners of the Tashkent region. This tour combines a unique scientific landmark, a sacred high-altitude mosque, local winemaking, and a proper mountain lunch into one memorable day.</p>
 {gallery([34,7,8],"Parkent tour — mountains, lunch and viewpoints")}
@@ -242,7 +264,7 @@ parkent = hero("Parkent — Golden Sun &amp; Wine Stories", "Uzbekistan has its 
 <h2>What to Bring</h2>{ul(["Warm layers — mountain weather can change quickly, especially spring and autumn","Comfortable walking shoes with grip — some paths are uneven","Water and sunscreen","Cash for any personal purchases"])}
 <p class="form-note">Child seats available on request. First aid kit always in the vehicle. Altitude sickness remedies recommended for sensitive travelers.</p>
 <h2>Meeting Point</h2><p>Agreed directly with your guide. You can discuss the exact pickup point after submitting your booking inquiry.</p>
-</div></section>{cta_band("Book the Parkent Tour","From €104 for up to 3 people. Tell us your date and group size and we will confirm within 24 hours.","Book This Tour","?tour=parkent")}"""
+</div></section>{cta_band("Book the Parkent Tour","From €104 / $119 for up to 3 people. Tell us your date and group size and we will confirm within 24 hours.","Book This Tour","?tour=parkent")}"""
 page("tours/parkent/", "Parkent Tour — Golden Sun & Wine Stories | Uzbek Travel",
      "7-hour private tour from Tashkent: the Solar Furnace, Ali Buva mountain mosque, CRUCHON winery tasting and a mountain lunch. From €104.", parkent, "Tours")
 
@@ -250,8 +272,8 @@ page("tours/parkent/", "Parkent Tour — Golden Sun & Wine Stories | Uzbek Trave
 bost = hero("Bostanlyk — Mountains, Nature &amp; Ancient Legends", "Touch 8,000-year-old rock carvings, ride a cable car over the valleys, and end the day at a waterfall.", 24) + f"""
 <section class="section"><div class="wrap prose">
 {facts([("Location","Bostanlyk District, Tashkent Region"),("Duration","9 hours"),("Format","Group tour — up to 16 people · Private option available"),
- ("Transport","Bus (included for groups up to 16)"),("Price","$66 per person (group) · $150–170 (private)"),("Children","Welcome"),
- ("Languages","English, Russian, Spanish"),("Extra costs","Lunch paid separately · Cable car approx. $9 per person"),("Booking",BOOK)])}
+ ("Transport","Bus (included for groups up to 16)"),("Price","$66 / €58 per person (group) · $150–170 / €131–148 (private)"),("Children","Welcome"),
+ ("Languages","English, Russian, Spanish"),("Extra costs","Lunch paid separately · Cable car approx. $9 / €8 per person"),("Booking",BOOK)])}
 <h2>What This Tour Is</h2>
 <p>A full-day journey into the Bostanlyk district, the wild and beautiful corner of the Tashkent region where the Tian Shan mountains begin. This tour connects ancient history, dramatic nature, and genuine Uzbek culture in a way that no city tour can match.</p>
 {gallery([25,19,9],"Bostanlyk tour — waterfall, petroglyphs and Charvak Reservoir")}
@@ -270,7 +292,7 @@ bost = hero("Bostanlyk — Mountains, Nature &amp; Ancient Legends", "Touch 8,00
 <h2>Who This Tour Is For</h2>{ul(["History and archaeology enthusiasts","Nature lovers and active travelers","Families with children — the cable car and waterfall are especially popular","Anyone who wants to leave the city and see a completely different Uzbekistan"])}
 <h2>What to Bring</h2>{ul(["Comfortable walking shoes or light hiking boots","Layers — mornings can be cool in the mountains","Swimwear if visiting in summer","Cash for lunch and cable car","Camera"])}
 <h2>Meeting Point</h2><p>Hotel pickup. Exact details confirmed after prepayment.</p>
-</div></section>{cta_band("Book the Bostanlyk Tour","From $66 per person. Tell us your date and group size and we will confirm within 24 hours.","Book This Tour","?tour=bostanlyk")}"""
+</div></section>{cta_band("Book the Bostanlyk Tour","From $66 / €58 per person. Tell us your date and group size and we will confirm within 24 hours.","Book This Tour","?tour=bostanlyk")}"""
 page("tours/bostanlyk/", "Bostanlyk Tour — Mountains, Petroglyphs & Waterfalls | Uzbek Travel",
      "9-hour tour into the Tian Shan foothills: 8,000-year-old petroglyphs, Chinorkent cable car, Charvak Reservoir and the Nanay waterfalls. From $66.", bost, "Tours")
 
@@ -377,7 +399,27 @@ PROFILES = {
 <p>Whether working with complete beginners or experienced mountaineers, Elena teaches not just technique but confidence. “Skiing is not just a sport. It is a way to experience real freedom.”</p>
 <p>With Elena, the Tian Shan is not a backdrop. It is the whole story.</p>"""),
 }
-gbody = hero("The People Who Make the Difference", "A tour is only as good as the person leading it.", 30) + '<section class="section"><div class="wrap">' + \
+# v2: guide bios from the client's "Guides profiles" doc (replace blueprint versions)
+PROFILES["mahmud"] = ("English, Russian, Uzbek", "Tashkent, Samarkand, Bukhara, multi-day tours, food and culture · 21 years in tourism · rated 5★ on Tripster", PROFILES["mahmud"][2])
+PROFILES["sarvinoz"] = ("Russian, English, Spanish", "Tashkent, Samarkand, Bukhara, Kokand, Tian Shan &amp; Tashkent region", """
+<p>Sarvinoz is a young and charismatic guide whose name has become synonymous with unique travel experiences across Uzbekistan. Her expertise stretches from historic Tashkent to the majestic cities of Samarkand and Bukhara, from enchanting Kokand to the mysterious heights of the Tian Shan mountains. She effortlessly blends a deep knowledge of the region's culture and history with a genuine passion for sharing that richness with every traveler.</p>
+<p>Sarvinoz begins every tour at the very heart of the capital, in Khast Imam Square, where she shares the city's thousand-year history — a place where Islamic architecture, Soviet heritage, and contemporary buildings stand side by side.</p>
+<div class="quote">“Tashkent is not just a city, it is a kaleidoscope of times and cultures.”</div>
+<p>In Samarkand she conveys the city's one-of-a-kind atmosphere as she passes the legendary Registan Square: “Every stone in Samarkand is like a page from an ancient book.” In Bukhara, the team's senior guides share stories of ancient caravanserais once connected to the Great Silk Road, and Kokand shows off its historic palaces and rich past as a center of cultural and commercial exchange.</p>
+<p>When the journey leads to the Tian Shan, the tours become true adventures among breathtaking peaks — full of stories of local traditions and the deep connection between people and nature. In the valleys and green hills of the Tashkent region, she introduces guests to craftsmen keeping ancestral skills alive.</p>
+<p>Every tour with Sarvinoz is more than a guided walk — it is a chance to become part of something greater.</p>""")
+PROFILES["konstantin"] = ("English, Uzbek, Russian", "Tashkent, Samarkand, Bukhara · artisan hubs of Parkent, Kokand &amp; Rishtan", """
+<p>Konstantin is a seasoned guide with an extensive reach across Uzbekistan, specializing in the historic corridors of Tashkent, Samarkand, and Bukhara, as well as the artisanal hubs of Parkent, Kokand, and Rishtan. A native of Uzbekistan, he has an unrivaled command of the region's history and culture. His tours are not merely sightseeing excursions but deeply immersive narratives that blend architectural expertise with firsthand cultural insight.</p>
+<p>Konstantin is known for his intuitive approach, tailoring each itinerary to the specific curiosities of his guests. He has mastered the classic routes, but he takes real pride in revealing the hidden gems and quiet corners of the country that remain off the beaten path.</p>
+<p>For Konstantin, guiding is an art form. He creates a journey where history is felt, not just heard — turning every traveler from an observer into a participant in the local culture.</p>""")
+PROFILES["elena"] = ("Russian, English", "Western Tian Shan · mountain trekking · skiing &amp; ski instruction", """
+<p>Elena is a professional mountain guide and ski instructor originally from Tashkent. Her life is a continuous adventure of majestic peaks and exhilarating descents, and she is eager to share the raw beauty of the Western Tian Shan with anyone ready to discover it.</p>
+<p>From the early morning hours, as the first rays of sun touch the snow-capped summits, Elena is already on the move — leading travelers along some of the most scenic routes in the region: snowy passes, forested slopes, and the mysterious canyons of the Western Tian Shan. She knows this terrain intimately, and whether she is with seasoned adventurers or complete beginners, she is dedicated to making every day unforgettable.</p>
+<div class="quote">“Today will be more than just a descent. We are here to learn to feel these mountains, and to understand how they breathe.”</div>
+<p>Elena works closely with other guides, instructors, and local residents so that every guest feels safe and inspired, and she is always there through the most technical sections. On the slopes she becomes an instructor, explaining with ease how to balance, read the terrain, and enjoy the thrill of speed. “Skiing is not merely a sport, it is a way to experience true freedom,” she says. “It is essential not to fear, but to trust yourself.”</p>
+<p>Along the way she shares stories of local mountain traditions and peaks that have guarded their secrets for millennia. With Elena, the mountains are not just routes on a map — they are stories you will want to live again and again.</p>""")
+
+gbody = hero("The People Who Make the Difference", "A tour is only as good as the person leading it.", 20) + '<section class="section"><div class="wrap">' + \
  '<p class="lead center" style="margin:0 auto 40px">Our guides are not employees reading from a script. They are local experts who have spent years learning every layer of this country — its history, its architecture, its food, its stories — because they genuinely love it. Meet the team.</p>'
 for g in GUIDES:
     langs, spec, bio = PROFILES[g[0]]
@@ -390,13 +432,13 @@ page("guides/", "Our Guides — Local Experts in Uzbekistan | Uzbek Travel",
      "Meet Mahmud, Sarvinoz, Konstantin and Elena — licensed local guides for Tashkent, Samarkand, Bukhara, Kokand and the Tian Shan.", gbody, "Our Guides")
 
 # ---------------------------------------------------------------- ABOUT
-about = hero("We Are Uzbek Travel", "Tourism is not our job. It is our way of life.", 1) + f"""
+about = hero("We Are Uzbek Travel", "Tourism is not our job. It is our way of life.", 1, "center 42%") + f"""
 <section class="section"><div class="wrap prose">
 <p class="lead">We are a team of local guides based in Tashkent, Uzbekistan. We have spent years learning the history, the architecture, the food, the stories, and the hidden corners of this extraordinary country so that we can share all of it with you.</p>
 <p>Our routes are not standard excursions. They are carefully designed journeys that take you into the culture, the nature, and the history of Uzbekistan in a way that leaves you with something real. Not just photographs, but a genuine feeling for the place.</p>
 <h2>Our Story</h2>
 <p>Uzbek Travel grew out of a simple belief: that the best way to experience a country is through the eyes of someone who truly loves it. Our founder Mahmud began guiding visitors through Tashkent because he simply could not stop talking about the city he grew up in. That same passion brought together our team of guides, each one an expert in their own corner of Uzbekistan.</p>
-<div class="gallery"><img src="{{R}}assets/img/pool/mahmut-coat.jpg" alt="Mahmud in a traditional chapan" loading="lazy"><img src="{img(6)}" alt="Mahmud with guests in Tashkent" loading="lazy"><img src="{{R}}assets/img/pool/mahmut-expo.jpg" alt="Mahmud representing Uzbek Travel at a travel expo" loading="lazy"></div>
+<div class="gallery tall"><img src="{{R}}assets/img/pool/mahmut-coat.jpg" alt="Mahmud in a traditional chapan" loading="lazy"><img src="{img(6)}" alt="Mahmud with guests in Tashkent" loading="lazy"><img src="{{R}}assets/img/pool/mahmut-expo.jpg" alt="Mahmud representing Uzbek Travel at a travel expo" loading="lazy"></div>
 <p>Today we lead private tours, group excursions, mountain adventures, wine and food experiences, and multi-day journeys from Tashkent all the way to Bukhara. Every tour is led by a licensed, experienced guide who speaks your language and knows this place inside out.</p>
 <h2>What Makes Us Different</h2>{ul(["We are local. Born and raised here, not imported guides.","We keep groups small so every guest gets real attention.","We go off the standard route to show you places most tourists never find.","We speak English, Russian, and Spanish.","We handle the logistics so you can focus on the experience.","We are honest about what to expect — no surprises, no pressure."])}
 <h2>Our Mission</h2><div class="quote">“To show every visitor the Uzbekistan that locals know and love — its layered history, its stunning landscapes, its extraordinary food, and above all, its people.”</div>
@@ -437,7 +479,7 @@ page("contact/", "Contact & Book — Plan Your Uzbekistan Trip | Uzbek Travel",
 
 # ---------------------------------------------------------------- assets: logo, monogram avatars, sitemap, robots
 open(os.path.join(ROOT, "assets/img/logo.svg"), "w").write(LOGO.replace('aria-hidden="true"', 'xmlns="http://www.w3.org/2000/svg"'))
-for slug, name, _, _, kind, color in GUIDES:
+for slug, name, _, _, kind, color in []:  # letter avatars retired v2 (real photos now)
     if kind != "img":
         open(os.path.join(ROOT, f"assets/img/guides/{slug}.svg"), "w").write(
 f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="{color}"/>
