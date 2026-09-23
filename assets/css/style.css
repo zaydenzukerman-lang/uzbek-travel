@@ -184,8 +184,8 @@ a,button,.card,.tile,summary{cursor:pointer}
 .foot .fbrand img{height:44px;width:auto}
 
 /* footer icon row */
-.social{display:flex;flex-wrap:wrap;gap:12px}
-.social a,.social span{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:inline-flex;align-items:center;justify-content:center;transition:.2s}
+.social{display:flex;flex-wrap:wrap;gap:9px}
+.social a,.social span{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:inline-flex;align-items:center;justify-content:center;transition:.2s}
 .social svg{width:21px;height:21px}
 .social a:hover{background:var(--orange);color:#3a2600;transform:translateY(-2px)}
 .social .soon{opacity:.55;cursor:default}
@@ -194,6 +194,32 @@ a,button,.card,.tile,summary{cursor:pointer}
 .gallery img{object-position:50% 30%}
 .gallery.tall img{aspect-ratio:3/4}
 .card-img,.tile .tbg{background-position:center 40%}
+
+
+/* nav: labels never wrap; collapse to the menu button before they would crowd (Russian labels are ~30% longer) */
+.nav-links a,.brand,.nav-right .btn{white-space:nowrap}
+@media(max-width:1060px){
+  .nav-links{position:fixed;inset:76px 0 auto 0;background:#fff;flex-direction:column;gap:0;padding:10px 22px 20px;border-bottom:1px solid var(--line);box-shadow:var(--shadow);display:none;margin:0}
+  .nav-links.open{display:flex}
+  .nav-links a{padding:13px 0;border-bottom:1px solid var(--line);width:100%}
+  .nav-toggle{display:block;order:3}
+  .nav-right{order:2;margin-left:auto}
+}
+@media(max-width:1250px){
+  html[lang="ru"] .nav-links{position:fixed;inset:76px 0 auto 0;background:#fff;flex-direction:column;gap:0;padding:10px 22px 20px;border-bottom:1px solid var(--line);box-shadow:var(--shadow);display:none;margin:0}
+  html[lang="ru"] .nav-links.open{display:flex}
+  html[lang="ru"] .nav-links a{padding:13px 0;border-bottom:1px solid var(--line);width:100%}
+  html[lang="ru"] .nav-toggle{display:block;order:3}
+  html[lang="ru"] .nav-right{order:2;margin-left:auto}
+}@media(max-width:1200px){
+  html[lang="es"] .nav-links{position:fixed;inset:76px 0 auto 0;background:#fff;flex-direction:column;gap:0;padding:10px 22px 20px;border-bottom:1px solid var(--line);box-shadow:var(--shadow);display:none;margin:0}
+  html[lang="es"] .nav-links.open{display:flex}
+  html[lang="es"] .nav-links a{padding:13px 0;border-bottom:1px solid var(--line);width:100%}
+  html[lang="es"] .nav-toggle{display:block;order:3}
+  html[lang="es"] .nav-right{order:2;margin-left:auto}
+}
+
+@media(max-width:680px){ .nav-links,html[lang="ru"] .nav-links,html[lang="es"] .nav-links{inset:68px 0 auto 0} }
 
 /* responsive */
 @media(max-width:900px){
@@ -205,9 +231,7 @@ a,button,.card,.tile,summary{cursor:pointer}
 @media(max-width:680px){
   body{font-size:16px}
   .section{padding:52px 0}
-  .nav-links{position:fixed;inset:76px 0 auto 0;background:#fff;flex-direction:column;gap:0;padding:10px 22px 20px;border-bottom:1px solid var(--line);box-shadow:var(--shadow);display:none}
-  .nav-links.open{display:flex}
-  .nav-links a{padding:13px 0;border-bottom:1px solid var(--line);width:100%}
+
   .nav{gap:10px;height:68px}
   .nav-links{inset:68px 0 auto 0}
   .brand{font-size:1.15rem;white-space:nowrap}.brand img{height:38px}

@@ -124,7 +124,14 @@ def build():
             out = os.path.join(ROOT, L, rel, "index.html")
             os.makedirs(os.path.dirname(out), exist_ok=True)
             open(out, "w", encoding="utf-8").write(str(s))
+    sitemap()
     for L in LANGS: print(f"{L}: built, {len(missing[L])} untranslated segments" + (f" e.g. {sorted(missing[L])[:5]}" if missing[L] else ""))
+
+def sitemap():
+    rels=[r for r,_ in en_pages()]
+    urls="".join(f"  <url><loc>{SITE}/{p}{r}</loc></url>\n" for p in ["","ru/","es/"] for r in rels)
+    open(os.path.join(ROOT,"sitemap.xml"),"w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+urls+"</urlset>\n")
+    print(f"sitemap: {len(rels)*3} urls")
 
 if __name__ == "__main__":
     {"extract": extract, "build": build}[sys.argv[1]]()
