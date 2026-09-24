@@ -457,8 +457,9 @@ contact = hero("Plan Your Trip", "No obligation. No pressure. Just a conversatio
 <p class="lead center" style="margin:0 auto 34px">Tell us about your trip and we will get back to you within 24 hours with a plan, a price, and any questions we have.</p>
 <form class="form" id="booking-form" action="https://formsubmit.co/ajax/{EMAIL}" method="POST">
  <div class="success" id="form-success">Thank you! We have received your enquiry and will reply to your email within 24 hours. We look forward to showing you Uzbekistan.</div>
+ <div class="form-error" id="form-error" role="alert" aria-live="assertive"></div>
  <input type="hidden" name="_subject" value="New tour enquiry — uzgbektravel.com"><input type="hidden" name="_template" value="table">
- <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+ <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
  <div class="row"><label for="f-name">Full Name *</label><input id="f-name" name="name" required></div>
  <div class="two"><div class="row"><label for="f-email">Email Address *</label><input id="f-email" type="email" name="email" required></div>
   <div class="row"><label for="f-country">Country You Are Traveling From *</label><input id="f-country" name="country" required></div></div>
