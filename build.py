@@ -16,9 +16,9 @@ e = html.escape
 import re as _re
 def _brand(name):
     svg = open(os.path.join(ROOT, "assets/img/icons", name + ".svg")).read()
-    return _re.sub(r"<title>.*?</title>", "", svg).replace('<svg ', '<svg fill="currentColor" aria-hidden="true" ')
-_MAIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>'
-_STAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>'
+    return _re.sub(r"<title>.*?</title>", "", svg).replace('<svg ', '<svg width="21" height="21" fill="currentColor" aria-hidden="true" ')
+_MAIL = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>'
+_STAR = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>'
 SOCIAL = ('<div class="social">'
   f'<a href="mailto:{EMAIL}" aria-label="Email us" title="Email: {EMAIL}">{_MAIL}</a>'
   f'<a href="{TG}" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram: @AhunjanovMahmut">{_brand("telegram")}</a>'
@@ -33,13 +33,16 @@ LOGO = """<svg viewBox="0 0 64 48" aria-hidden="true"><ellipse cx="32" cy="24" r
     f'<ellipse cx="32" cy="12" rx="3" ry="7" transform="rotate({a} 32 24)"/>' for a in range(0, 360, 45))
 
 ICON = {
- "compass": '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M16.2 7.8l-2.1 6.3-6.3 2.1 2.1-6.3z"/></svg>',
- "people": '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><circle cx="17" cy="9" r="2.8"/><path d="M16 13.6c3 .3 5.5 2.8 5.5 6"/></svg>',
- "star": '<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>',
+ "compass": '<svg width="58" height="58" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M16.2 7.8l-2.1 6.3-6.3 2.1 2.1-6.3z"/></svg>',
+ "people": '<svg width="58" height="58" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><circle cx="17" cy="9" r="2.8"/><path d="M16 13.6c3 .3 5.5 2.8 5.5 6"/></svg>',
+ "star": '<svg width="58" height="58" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>',
 }
 
 NAV = [("Home", ""), ("Tours", "tours/"), ("Destinations", "destinations/"), ("Our Guides", "guides/"),
        ("About Us", "about/"), ("Contact & Book", "contact/")]
+
+import hashlib as _h
+VER = _h.md5((open(os.path.join(ROOT,"assets/css/style.css"),"rb").read()+open(os.path.join(ROOT,"assets/js/main.js"),"rb").read())).hexdigest()[:8]  # cache-buster: changes whenever CSS/JS change
 
 def page(path, title, desc, body, active=""):
     depth = path.count("/")               # "" -> 0, "tours/" -> 1, "tours/parkent/" -> 2
@@ -55,10 +58,10 @@ def page(path, title, desc, body, active=""):
 <link rel="icon" href="{r}assets/img/favicon.png" type="image/png"><link rel="apple-touch-icon" href="{r}assets/img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{r}assets/css/style.css"></head><body>
-<header class="site-head"><div class="lang-bar"><div class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><div class="lang" aria-label="Language"><a class="on" href="{r}">EN</a><span>RU</span><span>ES</span></div></div></div><div class="wrap nav">
+<link rel="stylesheet" href="{r}assets/css/style.css?v={VER}"></head><body>
+<header class="site-head"><div class="lang-bar"><div class="wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><div class="lang" aria-label="Language"><a class="on" href="{r}">EN</a><span>RU</span><span>ES</span></div></div></div><div class="wrap nav">
  <a class="brand" href="{r}"><img src="{r}assets/img/logo.png" alt="Uzbek Travel logo" width="38" height="46"><span>Uzbek Travel</span></a>
- <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+ <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
  <nav class="nav-links">{navhtml}</nav>
  <div class="nav-right"><div class="lang"><a class="on" href="{r}">EN</a><span title="Russian version coming soon">RU</span><span title="Spanish version coming soon">ES</span></div>
  <a class="btn btn-orange" href="{r}contact/" style="padding:10px 20px">Book Now</a></div>
@@ -74,7 +77,7 @@ def page(path, title, desc, body, active=""):
   <li><a href="{r}tours/custom/">Custom &amp; Private Tours</a></li></ul></div>
  <div><h4>Contact</h4>{SOCIAL}</div>
 </div><div class="foot-bottom">&copy; 2026 Uzbek Travel. All rights reserved.</div></footer>
-<script src="{r}assets/js/main.js"></script></body></html>"""
+<script src="{r}assets/js/main.js?v={VER}"></script></body></html>"""
     out = os.path.join(ROOT, path, "index.html")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     open(out, "w", encoding="utf-8").write(head + body.replace("{R}", r) + foot)
@@ -139,7 +142,7 @@ TOUR_OPTIONS = [("parkent", "Parkent: Golden Sun &amp; Wine Stories (7 hours, fr
 
 # ---------------------------------------------------------------- AMERICAN-AUDIENCE LAYER
 # Most U.S. travelers have never considered Uzbekistan -> sell the country (why / safe / easy / cost) before the tours.
-CHK = '<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>'
+CHK = '<svg width="20" height="20" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>'
 TRUST = '<div class="trust"><div class="wrap">' + "".join(f"<span>{CHK}{t}</span>" for t in [
     "Visa-free for U.S. citizens (up to 30 days)", "Safe &amp; famously welcoming", "English-speaking local guides", "Rated 5★ on Tripster (12 reviews)", "We reply within 24 hours"]) + "</div></div>"
 WHY = [
