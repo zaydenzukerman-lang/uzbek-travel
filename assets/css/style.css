@@ -245,3 +245,19 @@ a,button,.card,.tile,summary{cursor:pointer}
   .hero{min-height:74vh}
   .foot-grid{gap:26px}
 }
+
+/* mobile language bar — always-visible switcher on phones (header .lang is hidden there to save space) */
+.lang-bar{display:none}
+@media(max-width:680px){
+  .lang-bar{display:block;background:var(--teal);color:#fff}
+  .lang-bar .wrap{display:flex;align-items:center;justify-content:flex-end;gap:8px;height:34px}
+  .lang-bar svg{width:16px;height:16px;opacity:.85}
+  .lang-bar .lang{display:flex!important;gap:4px}
+  .lang-bar .lang a{color:#cfe7e4;font-size:.85rem;font-weight:700;padding:5px 9px;border-radius:999px;min-width:34px;text-align:center}
+  .lang-bar .lang a.on{background:#fff;color:var(--teal)}
+  .nav-links,html[lang="ru"] .nav-links,html[lang="es"] .nav-links{inset:102px 0 auto 0}
+}
+@media(max-width:420px){
+  .brand{font-size:1rem;gap:8px}.brand img{height:34px}
+  .nav-right .btn{padding:7px 11px!important;font-size:.8rem}
+}

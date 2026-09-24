@@ -56,7 +56,7 @@ def page(path, title, desc, body, active=""):
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{r}assets/css/style.css"></head><body>
-<header class="site-head"><div class="wrap nav">
+<header class="site-head"><div class="lang-bar"><div class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><div class="lang" aria-label="Language"><a class="on" href="{r}">EN</a><span>RU</span><span>ES</span></div></div></div><div class="wrap nav">
  <a class="brand" href="{r}"><img src="{r}assets/img/logo.png" alt="Uzbek Travel logo" width="38" height="46"><span>Uzbek Travel</span></a>
  <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
  <nav class="nav-links">{navhtml}</nav>
