@@ -43,6 +43,7 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (data && String(data.success) === 'false') throw new Error(data.message || 'not sent');
+          if (window.gtag) gtag('event', 'generate_lead', { tour: (form.querySelector('[name="tour"]') || {}).value || '', site_language: L });  // enquiry = lead in Analytics
           okBox.style.display = 'block';
           form.reset(); form.querySelectorAll('.row,.two,button').forEach(function (el) { el.style.display = 'none'; });
           okBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -50,6 +51,12 @@
         .catch(function () { btn.disabled = false; btn.textContent = label; showErr(MSG.fail); });
     });
   }
+
+  // Analytics: count clicks on the contact icons / email / Telegram / VK / Tripster links
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="mailto:"],a[href*="t.me/"],a[href*="vk.ru"],a[href*="clubok.travel"]');
+    if (a && window.gtag) gtag('event', 'contact_click', { method: a.href.indexOf('mailto:') === 0 ? 'email' : a.href.indexOf('t.me') > -1 ? 'telegram' : a.href.indexOf('vk.ru') > -1 ? 'vk' : 'tripster' });
+  });
 
   // preselect tour from ?tour= on the contact page
   var sel = document.querySelector('select[name="tour"]'), q = new URLSearchParams(location.search).get('tour');
