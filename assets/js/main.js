@@ -58,6 +58,37 @@
     if (a && window.gtag) gtag('event', 'contact_click', { method: a.href.indexOf('mailto:') === 0 ? 'email' : a.href.indexOf('t.me') > -1 ? 'telegram' : a.href.indexOf('vk.ru') > -1 ? 'vk' : 'tripster' });
   });
 
+  // cookie consent banner (works with Google Consent Mode defaults set in <head>)
+  var CK = {
+    en: { txt: 'We use cookies to see how visitors use our site, so we can make it better.', yes: 'Accept', no: 'Decline', more: 'Learn more', p: '/privacy/' },
+    ru: { txt: 'Мы используем файлы cookie, чтобы понимать, как посетители пользуются сайтом, и делать его лучше.', yes: 'Принять', no: 'Отклонить', more: 'Подробнее', p: '/ru/privacy/' },
+    es: { txt: 'Usamos cookies para ver cómo se usa nuestro sitio y así mejorarlo.', yes: 'Aceptar', no: 'Rechazar', more: 'Más información', p: '/es/privacy/' }
+  }[L] || null;
+  function getConsent() { try { return localStorage.getItem('ut_consent'); } catch (e) { return null; } }
+  function setConsent(v) {
+    try { localStorage.setItem('ut_consent', v); } catch (e) {}
+    if (window.gtag) gtag('consent', 'update', { analytics_storage: v === 'yes' ? 'granted' : 'denied' });
+    if (v !== 'yes') document.cookie.split(';').forEach(function (c) {           // declining removes Analytics cookies already set
+      var n = c.split('=')[0].trim();
+      if (n.indexOf('_ga') === 0) ['', '.' + location.hostname.replace(/^www\./, '')].forEach(function (dm) {
+        document.cookie = n + '=; Max-Age=0; path=/' + (dm ? '; domain=' + dm : '');
+      });
+    });
+  }
+  function showBanner() {
+    if (!CK || document.getElementById('cookie-banner')) return;
+    var d = document.createElement('div');
+    d.id = 'cookie-banner'; d.setAttribute('role', 'region'); d.setAttribute('aria-label', 'Cookies');
+    d.innerHTML = '<p>' + CK.txt + ' <a href="' + CK.p + '">' + CK.more + '</a></p>' +
+      '<div class="ck-btns"><button type="button" class="btn btn-outline ck-no">' + CK.no + '</button>' +
+      '<button type="button" class="btn btn-orange ck-yes">' + CK.yes + '</button></div>';
+    document.body.appendChild(d);
+    d.querySelector('.ck-yes').addEventListener('click', function () { setConsent('yes'); d.remove(); });
+    d.querySelector('.ck-no').addEventListener('click', function () { setConsent('no'); d.remove(); });
+  }
+  if (!getConsent()) showBanner();
+  document.querySelectorAll('.cookie-settings,.cookie-settings-page').forEach(function (b) { b.addEventListener('click', showBanner); });
+
   // preselect tour from ?tour= on the contact page
   var sel = document.querySelector('select[name="tour"]'), q = new URLSearchParams(location.search).get('tour');
   if (sel && q) Array.prototype.forEach.call(sel.options, function (o) { if (o.value === q) o.selected = true; });

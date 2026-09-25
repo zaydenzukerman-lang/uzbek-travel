@@ -267,3 +267,16 @@ a,button,.card,.tile,summary{cursor:pointer}
 /* responsive hero images (phones load the 800px version) */
 .hero-bg,.page-hero{background-image:var(--bg)}
 @media(max-width:680px){.hero-bg,.page-hero{background-image:var(--bgm,var(--bg))}}
+
+/* cookie banner */
+#cookie-banner{position:fixed;left:16px;right:16px;bottom:16px;z-index:100;max-width:760px;margin:0 auto;background:#fff;
+  border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:16px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#cookie-banner p{margin:0;flex:1 1 320px;font-size:.95rem;color:var(--dark)}
+#cookie-banner a{color:var(--teal);font-weight:700;text-decoration:underline}
+#cookie-banner .ck-btns{display:flex;gap:10px;flex:0 0 auto}
+#cookie-banner .btn{padding:10px 20px;font-size:.92rem}
+@media(max-width:480px){#cookie-banner .ck-btns{width:100%}#cookie-banner .btn{flex:1;justify-content:center}}
+.foot-bottom .sep{opacity:.5;margin:0 4px}
+.foot-bottom a{color:#dbeceb;text-decoration:underline}
+.cookie-settings{background:none;border:0;color:#dbeceb;text-decoration:underline;font:inherit;cursor:pointer;padding:0}
+.cookie-settings:hover,.foot-bottom a:hover{color:#fff}

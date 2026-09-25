@@ -52,7 +52,7 @@ import json as _json
 AGENCY_ID = SITE + "/#agency"
 OFFERS = {"parkent": [(104, "EUR"), (119, "USD")], "bostanlyk": [(66, "USD"), (58, "EUR")]}
 LANGCODE = {"English": "en", "Russian": "ru", "Spanish": "es", "Uzbek": "uz"}
-NAVNAME = {"tours": "Tours", "destinations": "Destinations", "guides": "Our Guides", "about": "About Us", "contact": "Contact & Book"}
+NAVNAME = {"privacy": "Privacy & Cookies", "tours": "Tours", "destinations": "Destinations", "guides": "Our Guides", "about": "About Us", "contact": "Contact & Book"}
 def _txt(s): return html.unescape(re.sub(r"<[^>]+>", "", s)).strip()
 def auto_schema(path, title, desc, body, og):
     url = f"{SITE}/{path}"
@@ -124,9 +124,14 @@ def page(path, title, desc, body, active="", schema=None, prefix=None, outfile=N
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="{FONTS}" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="{FONTS}"></noscript>
 <link rel="stylesheet" href="{r}assets/css/style.css?v={VER}">
+<!-- Google Consent Mode v2: EU/UK/CH = no analytics storage until Accept; elsewhere on by default; ads always off -->
+<script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}
+gtag('consent','default',{{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',region:["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE","IS","LI","NO","GB","CH"],wait_for_update:500}});
+gtag('consent','default',{{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'granted'}});
+try{{var c=localStorage.getItem('ut_consent');if(c)gtag('consent','update',{{analytics_storage:c==='yes'?'granted':'denied'}});}}catch(e){{}}
+gtag('js',new Date());gtag('config','G-MQLQ4NK63M');</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MQLQ4NK63M"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-MQLQ4NK63M');</script>
 </head><body>
 <header class="site-head"><div class="lang-bar"><div class="wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><div class="lang" aria-label="Language"><a class="on" href="{r}">EN</a><span>RU</span><span>ES</span></div></div></div><div class="wrap nav">
  <a class="brand" href="{r}"><img src="{r}assets/img/w/logo-96.webp" alt="Uzbek Travel logo" width="38" height="46"><span>Uzbek Travel</span></a>
@@ -145,7 +150,7 @@ def page(path, title, desc, body, active="", schema=None, prefix=None, outfile=N
   <li><a href="{r}tours/tashkent-bukhara/">Tashkent to Bukhara</a></li>
   <li><a href="{r}tours/custom/">Custom &amp; Private Tours</a></li></ul></div>
  <div><div class="fh">Contact</div>{SOCIAL}</div>
-</div><div class="foot-bottom">&copy; 2026 Uzbek Travel. All rights reserved.</div></footer>
+</div><div class="foot-bottom"><span>&copy; 2026 Uzbek Travel. All rights reserved.</span> <span class="sep">·</span> <a href="{r}privacy/">Privacy &amp; Cookies</a> <span class="sep">·</span> <button type="button" class="cookie-settings">Cookie settings</button></div></footer>
 <script src="{r}assets/js/main.js?v={VER}"></script></body></html>"""
     out = os.path.join(ROOT, outfile) if outfile else os.path.join(ROOT, path, "index.html")
     os.makedirs(os.path.dirname(out), exist_ok=True)
@@ -556,6 +561,24 @@ contact = hero("Plan Your Trip", "No obligation. No pressure. Just a conversatio
 </div></div></section>"""
 page("contact/", "Contact & Book — Plan Your Uzbekistan Trip | Uzbek Travel",
      "Send us your dates, group size and interests and we will reply within 24 hours with a plan and a price. No obligation.", contact, "Contact & Book")
+
+# ---------------------------------------------------------------- PRIVACY & COOKIES
+pv = hero("Privacy &amp; Cookies", "What we collect, and why.", "tashkent1") + f"""
+<section class="section"><div class="wrap prose">
+<h2>Analytics</h2>
+<p>We use Google Analytics to understand how people find and use this website, for example which pages are visited, roughly which country visitors come from, and what kind of device they use. This helps us improve the site. Google Analytics uses cookies to do this.</p>
+<h2>Your choice</h2>
+<p>Visitors in the European Union, the UK and Switzerland: analytics cookies are only used if you click Accept. Everyone can change their choice at any time with the “Cookie settings” link at the bottom of every page.</p>
+<p><button type="button" class="btn btn-outline cookie-settings-page">Change cookie settings</button></p>
+<h2>Your enquiry</h2>
+<p>When you send an enquiry, your name, email, travel details and message are sent to our email inbox ({EMAIL}) through the FormSubmit service, so that we can reply to you. We use them only to plan your trip, and we never sell them.</p>
+<h2>No advertising</h2>
+<p>We do not use advertising cookies, and we do not sell or share your data for advertising.</p>
+<h2>Questions</h2>
+<p>Questions about your data? Email us at <a href="mailto:{EMAIL}">{EMAIL}</a> and we will help, including deleting anything you have sent us.</p>
+<p class="form-note">Last updated: September 2026</p>
+</div></section>"""
+page("privacy/", "Privacy & Cookies | Uzbek Travel", "How Uzbek Travel uses cookies, Google Analytics and the information you send through our enquiry form.", pv)
 
 # ---------------------------------------------------------------- 404
 nf = f"""<section class="page-hero" style="background-image:url('{img("registan3","lg")}')"><div class="wrap">
