@@ -4,7 +4,7 @@
   python3 i18n.py build     -> writes /ru/... and /es/... from i18n/ru.json + i18n/es.json,
                                and wires the EN | RU | ES switcher + hreflang on every page.
 Run AFTER build.py (build.py regenerates the English pages)."""
-import os, re, sys, json, glob, hashlib
+import os, re, sys, json, glob, hashlib, html as _html
 from bs4 import BeautifulSoup, NavigableString, Comment, Doctype
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +26,7 @@ def en_pages():
     return out
 
 def skip(el):
-    return any(p.name in ("script", "style", "svg") or "lang" in (p.get("class") or []) for p in [el, *el.parents] if p.name)
+    return any(p.name in ("script", "style", "svg") or {"lang", "fbrand", "brand"} & set(p.get("class") or []) for p in [el, *el.parents] if p.name)
 
 def units(soup):
     """Deterministic list of elements whose inner HTML is one translatable segment."""
@@ -51,7 +51,7 @@ def attr_targets(soup):
             v = el.get(a)
             if v and LETTERS.search(v) and "@" not in v: out.append((el, a))
     for m in soup.find_all("meta"):
-        if m.get("name") == "description" or m.get("property") in ("og:title", "og:description"):
+        if m.get("name") == "description" or m.get("property") in ("og:title", "og:description", "og:image:alt"):
             out.append((m, "content"))
     return out
 
@@ -87,10 +87,38 @@ def switcher(soup, rel, lang):
                 if L == lang: a["style"] = "color:#fff;font-weight:700"
                 p.append(a)
     head = soup.head
+    LOC = {"en": "en_US", "ru": "ru_RU", "es": "es_ES"}
+    for m in head.find_all("meta", property=["og:locale", "og:locale:alternate"]): m.decompose()
+    ogt = head.find("meta", property="og:site_name") or head.find("meta", property="og:url")
+    tags = [soup.new_tag("meta", property="og:locale", content=LOC[lang])] + \
+           [soup.new_tag("meta", property="og:locale:alternate", content=LOC[x]) for x in LOC if x != lang]
+    for t in reversed(tags): ogt.insert_after(t)
     for old in head.select('link[rel="alternate"]'): old.decompose()
     for L in ["en", "ru", "es"]:
         head.append(soup.new_tag("link", rel="alternate", hreflang=L, href=f"{SITE}/{'' if L=='en' else L+'/'}{rel}"))
     head.append(soup.new_tag("link", rel="alternate", hreflang="x-default", href=f"{SITE}/{rel}"))
+
+AGENCY_ID = SITE + "/#agency"
+def localize_ld(node, L, tr, missing):
+    """Translate schema.org strings via the same segment dictionary, and point page URLs at the /ru/ or /es/ version."""
+    if isinstance(node, dict):
+        out = {}
+        for k, v in node.items():
+            if k in ("@context", "@type", "@id", "email", "sameAs", "logo", "image", "priceCurrency", "knowsLanguage", "addressCountry"):
+                out[k] = v
+            elif k == "inLanguage": out[k] = L
+            else: out[k] = localize_ld(v, L, tr, missing)
+        return out
+    if isinstance(node, list): return [localize_ld(x, L, tr, missing) for x in node]
+    if isinstance(node, str):
+        if node.startswith(SITE + "/") and "/assets/" not in node and node != AGENCY_ID:
+            return SITE + "/" + L + node[len(SITE):]
+        if not LETTERS.search(node) or node.startswith("http"): return node
+        for cand in (node, _html.escape(node, quote=False)):
+            k = key(cand)
+            if k in tr: return _html.unescape(re.sub(r"<[^>]+>", "", tr[k])).strip()
+        missing.add("ld:" + node[:40]); return node
+    return node
 
 def build():
     tr = {L: json.load(open(os.path.join(ROOT, f"i18n/{L}.json"), encoding="utf-8")) for L in LANGS}
@@ -108,9 +136,9 @@ def build():
                     for node in list(BeautifulSoup(tr[L][k], "html.parser").contents): el.append(node)
                 else: missing[L].add(k)
             for el, a in attr_targets(s):
-                k = key(el[a])
-                if k in tr[L]: el[a] = tr[L][k]
-                else: missing[L].add(k)
+                hit = next((tr[L][key(c)] for c in (el[a], _html.escape(el[a], quote=False)) if key(c) in tr[L]), None)
+                if hit is not None: el[a] = _html.unescape(re.sub(r"<[^>]+>", "", hit)).strip()
+                else: missing[L].add(key(el[a]))
             s.html["lang"] = L
             for el in s.find_all(True):                               # assets live one level up from /ru/ and /es/
                 for a in ("src", "href"):
@@ -120,6 +148,10 @@ def build():
                     el["style"] = re.sub(r"url\('(?!http)", "url('../", el["style"])
             can = s.find("link", rel="canonical")
             if can: can["href"] = f"{SITE}/{L}/{rel}"
+            for m in s.find_all("meta", property="og:url"): m["content"] = f"{SITE}/{L}/{rel}"
+            for sc in s.find_all("script", type="application/ld+json"):
+                data = json.loads(sc.string)
+                sc.string = json.dumps(localize_ld(data, L, tr[L], missing[L]), ensure_ascii=False).replace("</", "<\\/")
             switcher(s, rel, L)
             out = os.path.join(ROOT, L, rel, "index.html")
             os.makedirs(os.path.dirname(out), exist_ok=True)
@@ -129,8 +161,9 @@ def build():
 
 def sitemap():
     rels=[r for r,_ in en_pages()]
-    urls="".join(f"  <url><loc>{SITE}/{p}{r}</loc></url>\n" for p in ["","ru/","es/"] for r in rels)
-    open(os.path.join(ROOT,"sitemap.xml"),"w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+urls+"</urlset>\n")
+    alts=lambda r: "".join(f'<xhtml:link rel="alternate" hreflang="{l}" href="{SITE}/{"" if l=="en" else l+"/"}{r}"/>' for l in ["en","ru","es"]) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{SITE}/{r}"/>'
+    urls="".join(f"  <url><loc>{SITE}/{p}{r}</loc>{alts(r)}</url>\n" for p in ["","ru/","es/"] for r in rels)
+    open(os.path.join(ROOT,"sitemap.xml"),"w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'+urls+"</urlset>\n")
     print(f"sitemap: {len(rels)*3} urls")
 
 if __name__ == "__main__":

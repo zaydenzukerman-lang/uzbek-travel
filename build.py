@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Uzbek Travel static site generator. Run: python3 build.py  -> writes all pages into this folder.
 Content comes from the client's Website Design & Content Blueprint (Sep 2026)."""
-import os, html
+import os, html, re
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://uzgbektravel.com"
@@ -44,50 +44,119 @@ NAV = [("Home", ""), ("Tours", "tours/"), ("Destinations", "destinations/"), ("O
 import hashlib as _h
 VER = _h.md5((open(os.path.join(ROOT,"assets/css/style.css"),"rb").read()+open(os.path.join(ROOT,"assets/js/main.js"),"rb").read())).hexdigest()[:8]  # cache-buster: changes whenever CSS/JS change
 
-def page(path, title, desc, body, active=""):
-    depth = path.count("/")               # "" -> 0, "tours/" -> 1, "tours/parkent/" -> 2
-    r = "../" * depth
+FONTS = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+import json as _json
+# ---------------------------------------------------------------- structured data (schema.org JSON-LD)
+# Generated from each page's own content. Only verifiable facts — no ratings/addresses we can't back up
+# (Google penalizes self-published aggregateRating for local businesses).
+AGENCY_ID = SITE + "/#agency"
+OFFERS = {"parkent": [(104, "EUR"), (119, "USD")], "bostanlyk": [(66, "USD"), (58, "EUR")]}
+LANGCODE = {"English": "en", "Russian": "ru", "Spanish": "es", "Uzbek": "uz"}
+NAVNAME = {"tours": "Tours", "destinations": "Destinations", "guides": "Our Guides", "about": "About Us", "contact": "Contact & Book"}
+def _txt(s): return html.unescape(re.sub(r"<[^>]+>", "", s)).strip()
+def auto_schema(path, title, desc, body, og):
+    url = f"{SITE}/{path}"
+    h1 = _txt(re.search(r"<h1[^>]*>(.*?)</h1>", body, re.S).group(1))
+    parts = [p for p in path.split("/") if p]
+    out = []
+    if parts:  # breadcrumbs
+        items = [("Home", "")]
+        if len(parts) >= 1: items.append((NAVNAME[parts[0]], parts[0] + "/"))
+        if len(parts) >= 2: items.append((h1, path))
+        out.append({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": i + 1, "name": n, "item": f"{SITE}/{p}"} for i, (n, p) in enumerate(items)]})
+    if path == "":
+        out.append({"@context": "https://schema.org", "@type": "TravelAgency", "@id": AGENCY_ID, "name": "Uzbek Travel",
+            "url": SITE + "/", "logo": SITE + "/assets/img/logo-256.png", "image": og, "email": EMAIL, "description": desc,
+            "address": {"@type": "PostalAddress", "addressLocality": "Tashkent", "addressCountry": "UZ"},
+            "areaServed": {"@type": "Country", "name": "Uzbekistan"}, "knowsLanguage": ["en", "ru", "es"],
+            "founder": {"@type": "Person", "name": "Mahmud"}, "sameAs": [VK, TG, TRIP_TOURS, TRIP_GUIDE]})
+        out.append({"@context": "https://schema.org", "@type": "WebSite", "name": "Uzbek Travel", "url": SITE + "/", "inLanguage": "en"})
+    if path in ("", "contact/"):
+        qs = FAQ if path == "" else FAQ[:4]
+        out.append({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in qs]})
+    if len(parts) == 2 and parts[0] == "tours":
+        t = {"@context": "https://schema.org", "@type": "TouristTrip", "name": h1, "description": desc, "url": url, "image": og,
+             "inLanguage": "en", "provider": {"@id": AGENCY_ID}}
+        stops_ = re.search(r'<ol class="stops">(.*?)</ol>', body, re.S)
+        if stops_:
+            t["itinerary"] = {"@type": "ItemList", "itemListElement": [
+                {"@type": "ListItem", "position": i + 1, "item": {"@type": "TouristAttraction", "name": _txt(n)}}
+                for i, n in enumerate(re.findall(r"<h4>(.*?)</h4>", stops_.group(1), re.S))]}
+        if parts[1] in OFFERS:
+            t["offers"] = [{"@type": "Offer", "price": p, "priceCurrency": c, "url": url, "seller": {"@id": AGENCY_ID}} for p, c in OFFERS[parts[1]]]
+        out.append(t)
+    if len(parts) == 2 and parts[0] == "destinations":
+        out.append({"@context": "https://schema.org", "@type": "TouristDestination", "name": h1, "description": desc, "url": url,
+                    "image": og, "containedInPlace": {"@type": "Country", "name": "Uzbekistan"}})
+    if path == "guides/":
+        for g in GUIDES:
+            langs, spec, _ = PROFILES[g[0]]
+            out.append({"@context": "https://schema.org", "@type": "Person", "name": g[1], "jobTitle": _txt(g[2]),
+                        "image": f"{SITE}/assets/img/w/g-{g[4]}.webp", "knowsLanguage": [LANGCODE[x.strip()] for x in langs.split(",")],
+                        "worksFor": {"@id": AGENCY_ID}, "url": f"{url}#{g[0]}"})
+    if path == "about/":
+        out.append({"@context": "https://schema.org", "@type": "AboutPage", "name": h1, "description": desc, "url": url, "about": {"@id": AGENCY_ID}})
+    if path == "contact/":
+        out.append({"@context": "https://schema.org", "@type": "ContactPage", "name": h1, "url": url,
+                    "mainEntity": {"@id": AGENCY_ID, "@type": "TravelAgency", "name": "Uzbek Travel", "email": EMAIL}})
+    return out
+
+def page(path, title, desc, body, active="", schema=None, prefix=None, outfile=None):
+    m = re.search(r'data-og="([^"]+)"', body); og = m.group(1) if m else img_jpg("samarkand1")
+    h = re.search(r"background-image:url\('\{R\}([^']+-lg\.webp)'\)", body)
+    depth = path.count("/")
+    preload = f'<link rel="preload" as="image" href="{"../"*depth}{h.group(1)}" type="image/webp" fetchpriority="high">' if h else ""
+    ld = "".join('<script type="application/ld+json">' + _json.dumps(s, ensure_ascii=False).replace("</", "<\\/") + "</script>"
+                 for s in (schema if schema is not None else auto_schema(path, title, desc, body, og)))               # "" -> 0, "tours/" -> 1, "tours/parkent/" -> 2
+    r = "../" * depth if prefix is None else prefix
     navhtml = "".join(f'<a href="{r}{h}"{" class=\"active\"" if n == active else ""}>{n}</a>' for n, h in NAV)
     head = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
 <link rel="canonical" href="{SITE}/{path}"><meta property="og:type" content="website">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
-<meta property="og:image" content="{SITE}/assets/img/pool/px-samarkand1.jpg"><meta property="og:url" content="{SITE}/{path}">
+<meta property="og:image" content="{og}"><meta property="og:image:alt" content="{e(title)}"><meta property="og:url" content="{SITE}/{path}"><meta property="og:site_name" content="Uzbek Travel"><meta property="og:locale" content="en_US"><meta name="twitter:image" content="{og}"><meta name="theme-color" content="#1a5f6e">{preload}{ld}
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="{r}assets/img/favicon.png" type="image/png"><link rel="apple-touch-icon" href="{r}assets/img/logo.png">
+<link rel="icon" href="{r}assets/img/favicon.png" type="image/png"><link rel="apple-touch-icon" href="{r}assets/img/logo-256.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="{FONTS}" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="{FONTS}"></noscript>
 <link rel="stylesheet" href="{r}assets/css/style.css?v={VER}"></head><body>
 <header class="site-head"><div class="lang-bar"><div class="wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><div class="lang" aria-label="Language"><a class="on" href="{r}">EN</a><span>RU</span><span>ES</span></div></div></div><div class="wrap nav">
- <a class="brand" href="{r}"><img src="{r}assets/img/logo.png" alt="Uzbek Travel logo" width="38" height="46"><span>Uzbek Travel</span></a>
+ <a class="brand" href="{r}"><img src="{r}assets/img/w/logo-96.webp" alt="Uzbek Travel logo" width="38" height="46"><span>Uzbek Travel</span></a>
  <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
  <nav class="nav-links">{navhtml}</nav>
  <div class="nav-right"><div class="lang"><a class="on" href="{r}">EN</a><span title="Russian version coming soon">RU</span><span title="Spanish version coming soon">ES</span></div>
  <a class="btn btn-orange" href="{r}contact/" style="padding:10px 20px">Book Now</a></div>
 </div></header>"""
     foot = f"""<footer class="foot"><div class="wrap foot-grid">
- <div><div class="fbrand"><img src="{r}assets/img/logo.png" alt="" width="36" height="44">Uzbek Travel</div><p>uzgbektravel.com<br>Tashkent, Uzbekistan</p>
+ <div><div class="fbrand"><img src="{r}assets/img/w/logo-96.webp" alt="" width="36" height="44" loading="lazy">Uzbek Travel</div><p>uzgbektravel.com<br>Tashkent, Uzbekistan</p>
  <p style="margin-top:14px"><b style="color:#fff">EN</b> &nbsp;|&nbsp; RU &nbsp;|&nbsp; ES</p></div>
- <div><h4>Quick Links</h4><ul>{"".join(f'<li><a href="{r}{h}">{n}</a></li>' for n, h in NAV)}</ul></div>
- <div><h4>Our Tours</h4><ul>
+ <div><div class="fh">Quick Links</div><ul>{"".join(f'<li><a href="{r}{h}">{n}</a></li>' for n, h in NAV)}</ul></div>
+ <div><div class="fh">Our Tours</div><ul>
   <li><a href="{r}tours/parkent/">Parkent: Golden Sun &amp; Wine Stories</a></li>
   <li><a href="{r}tours/bostanlyk/">Bostanlyk: Mountains &amp; Ancient Legends</a></li>
   <li><a href="{r}tours/tashkent-bukhara/">Tashkent to Bukhara</a></li>
   <li><a href="{r}tours/custom/">Custom &amp; Private Tours</a></li></ul></div>
- <div><h4>Contact</h4>{SOCIAL}</div>
+ <div><div class="fh">Contact</div>{SOCIAL}</div>
 </div><div class="foot-bottom">&copy; 2026 Uzbek Travel. All rights reserved.</div></footer>
 <script src="{r}assets/js/main.js?v={VER}"></script></body></html>"""
-    out = os.path.join(ROOT, path, "index.html")
+    out = os.path.join(ROOT, outfile) if outfile else os.path.join(ROOT, path, "index.html")
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    open(out, "w", encoding="utf-8").write(head + body.replace("{R}", r) + foot)
+    doc = head + body.replace("{R}", r) + foot
+    if outfile: doc = doc.replace('<meta name="viewport"', '<meta name="robots" content="noindex"><meta name="viewport"', 1)
+    open(out, "w", encoding="utf-8").write(doc)
     print("wrote", "/" + path)
 
-def img(n):  # ints = client's own photos (zero-padded), strings = Pexels landmark shots ("registan3" -> px-registan3.jpg)
-    return "{R}assets/img/pool/%s.jpg" % (("%02d" % n) if isinstance(n, int) else "px-" + n)
+def _nm(n): return ("%02d" % n) if isinstance(n, int) else "px-" + n
+def img(n, size="md"):  # sized WebP: md = 800px (cards/tiles/galleries), lg = 1600px (page heroes)
+    return "{R}assets/img/w/%s-%s.webp" % (_nm(n), size)
+def img_jpg(n):         # original JPEG, absolute — for share previews (og:image) where WebP isn't safe
+    return "%s/assets/img/pool/%s.jpg" % (SITE, _nm(n))
 
 def hero(title, sub, pic, pos="center"):
-    return f'<section class="page-hero" style="background-image:url(\'{img(pic)}\');background-position:{pos}"><div class="wrap"><h1>{title}</h1><p>{sub}</p></div></section>'
+    return f'<section class="page-hero" data-og="{img_jpg(pic)}" style="background-image:url(\'{img(pic,"lg")}\');background-position:{pos}"><div class="wrap"><h1>{title}</h1><p>{sub}</p></div></section>'
 
 def tour_card(slug, title, meta, desc, pic, cat=""):
     return f"""<a class="card" href="{{R}}tours/{slug}/" data-cat="{cat}"><div class="card-img" style="background-image:url('{img(pic)}')"></div>
@@ -101,7 +170,7 @@ def facts(rows):
     return '<div class="factbox"><dl>' + "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows) + "</dl></div>"
 
 def gallery(pics, alt):
-    return '<div class="gallery">' + "".join(f'<img src="{img(p)}" alt="{e(alt)}" loading="lazy">' for p in pics) + "</div>"
+    return '<div class="gallery">' + "".join(f'<img src="{img(p)}" alt="{e(alt)}" loading="lazy" decoding="async" width="800" height="600">' for p in pics) + "</div>"
 
 def stops(items):
     return '<ol class="stops">' + "".join(f"<li><h4>{t}</h4><p>{d}</p></li>" for t, d in items) + "</ol>"
@@ -133,7 +202,7 @@ GUIDES = [
  ("elena", "Elena", "Mountain Guide &amp; Ski Instructor", "Snowy passes, forested slopes and canyons of the Western Tian Shan.", "elena", ""),
 ]
 def avatar(g, size_cls="avatar"):
-    return f'<img class="{size_cls}" src="{{R}}assets/img/guides/{g[4]}.jpg" alt="{g[1]}, {g[2].replace("&amp;","&")} at Uzbek Travel" loading="lazy">'
+    return f'<img class="{size_cls}" src="{{R}}assets/img/w/g-{g[4]}.webp" width="150" height="150" alt="{g[1]}, {g[2].replace("&amp;","&")} at Uzbek Travel" loading="lazy">'
 
 TOUR_OPTIONS = [("parkent", "Parkent: Golden Sun &amp; Wine Stories (7 hours, from €104 / $119)"),
                 ("bostanlyk", "Bostanlyk: Mountains &amp; Ancient Legends (9 hours, from $66 / €58 per person)"),
@@ -168,7 +237,7 @@ def faq_block(items):
 
 # ---------------------------------------------------------------- HOME
 home = f"""
-<section class="hero"><div class="hero-bg" style="background-image:url('{img("samarkand1")}')"></div>
+<section class="hero" data-og="{img_jpg("samarkand1")}"><div class="hero-bg" style="background-image:url('{img("samarkand1","lg")}')"></div>
 <div class="wrap hero-in"><div class="eyebrow" style="color:#f5a623">Uzbek Travel · Tashkent</div>
 <h1>Discover the Real Uzbekistan</h1><p>Private and group tours led by local guides who love what they do.</p>
 <div class="hero-ctas"><a class="btn btn-orange" href="{{R}}tours/">Explore Our Tours</a><a class="btn btn-ghost" href="{{R}}guides/">Meet Our Guides</a></div></div></section>
@@ -480,6 +549,14 @@ contact = hero("Plan Your Trip", "No obligation. No pressure. Just a conversatio
 </div></div></section>"""
 page("contact/", "Contact & Book — Plan Your Uzbekistan Trip | Uzbek Travel",
      "Send us your dates, group size and interests and we will reply within 24 hours with a plan and a price. No obligation.", contact, "Contact & Book")
+
+# ---------------------------------------------------------------- 404
+nf = f"""<section class="page-hero" style="background-image:url('{img("registan3","lg")}')"><div class="wrap">
+<h1>Page not found</h1><p>Страница не найдена · Página no encontrada</p></div></section>
+<section class="section"><div class="wrap center"><p class="lead" style="margin:0 auto 26px">The page you were looking for has moved or no longer exists. Let's get you back on the road.</p>
+<p style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a class="btn btn-orange" href="/">Home</a><a class="btn btn-outline" href="/tours/">Our Tours</a><a class="btn btn-outline" href="/contact/">Contact &amp; Book</a></p>
+<p style="margin-top:26px"><a href="/ru/">Русская версия</a> &nbsp;·&nbsp; <a href="/es/">Versión en español</a></p></div></section>"""
+page("404/", "Page not found | Uzbek Travel", "This page could not be found.", nf, schema=[], prefix="/", outfile="404.html")
 
 # ---------------------------------------------------------------- assets: logo, monogram avatars, sitemap, robots
 open(os.path.join(ROOT, "assets/img/logo.svg"), "w").write(LOGO.replace('aria-hidden="true"', 'xmlns="http://www.w3.org/2000/svg"'))
