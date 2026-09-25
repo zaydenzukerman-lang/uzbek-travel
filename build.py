@@ -83,7 +83,7 @@ def auto_schema(path, title, desc, body, og):
         if stops_:
             t["itinerary"] = {"@type": "ItemList", "itemListElement": [
                 {"@type": "ListItem", "position": i + 1, "item": {"@type": "TouristAttraction", "name": _txt(n)}}
-                for i, n in enumerate(re.findall(r"<h4>(.*?)</h4>", stops_.group(1), re.S))]}
+                for i, n in enumerate(re.findall(r"<h3>(.*?)</h3>", stops_.group(1), re.S))]}
         if parts[1] in OFFERS:
             t["offers"] = [{"@type": "Offer", "price": p, "priceCurrency": c, "url": url, "seller": {"@id": AGENCY_ID}} for p, c in OFFERS[parts[1]]]
         out.append(t)
@@ -105,9 +105,10 @@ def auto_schema(path, title, desc, body, og):
 
 def page(path, title, desc, body, active="", schema=None, prefix=None, outfile=None):
     m = re.search(r'data-og="([^"]+)"', body); og = m.group(1) if m else img_jpg("samarkand1")
-    h = re.search(r"background-image:url\('\{R\}([^']+-lg\.webp)'\)", body)
+    h = re.search(r"--bg:url\('(/[^']+)-lg\.webp'\)", body)
     depth = path.count("/")
-    preload = f'<link rel="preload" as="image" href="{"../"*depth}{h.group(1)}" type="image/webp" fetchpriority="high">' if h else ""
+    preload = (f'<link rel="preload" as="image" href="{h.group(1)}-md.webp" type="image/webp" fetchpriority="high" media="(max-width:680px)">'
+               f'<link rel="preload" as="image" href="{h.group(1)}-lg.webp" type="image/webp" fetchpriority="high" media="(min-width:681px)">') if h else ""
     ld = "".join('<script type="application/ld+json">' + _json.dumps(s, ensure_ascii=False).replace("</", "<\\/") + "</script>"
                  for s in (schema if schema is not None else auto_schema(path, title, desc, body, og)))               # "" -> 0, "tours/" -> 1, "tours/parkent/" -> 2
     r = "../" * depth if prefix is None else prefix
@@ -152,11 +153,13 @@ def page(path, title, desc, body, active="", schema=None, prefix=None, outfile=N
 def _nm(n): return ("%02d" % n) if isinstance(n, int) else "px-" + n
 def img(n, size="md"):  # sized WebP: md = 800px (cards/tiles/galleries), lg = 1600px (page heroes)
     return "{R}assets/img/w/%s-%s.webp" % (_nm(n), size)
+def vimg(n, size="md"):  # site-absolute: url() inside a CSS variable resolves against the STYLESHEET, not the page
+    return img(n, size).replace("{R}", "/")
 def img_jpg(n):         # original JPEG, absolute — for share previews (og:image) where WebP isn't safe
     return "%s/assets/img/pool/%s.jpg" % (SITE, _nm(n))
 
 def hero(title, sub, pic, pos="center"):
-    return f'<section class="page-hero" data-og="{img_jpg(pic)}" style="background-image:url(\'{img(pic,"lg")}\');background-position:{pos}"><div class="wrap"><h1>{title}</h1><p>{sub}</p></div></section>'
+    return f'<section class="page-hero" data-og="{img_jpg(pic)}" style="--bg:url(\'{vimg(pic,"lg")}\');--bgm:url(\'{vimg(pic)}\');background-position:{pos}"><div class="wrap"><h1>{title}</h1><p>{sub}</p></div></section>'
 
 def tour_card(slug, title, meta, desc, pic, cat=""):
     return f"""<a class="card" href="{{R}}tours/{slug}/" data-cat="{cat}"><div class="card-img" style="background-image:url('{img(pic)}')"></div>
@@ -173,7 +176,7 @@ def gallery(pics, alt):
     return '<div class="gallery">' + "".join(f'<img src="{img(p)}" alt="{e(alt)}" loading="lazy" decoding="async" width="800" height="600">' for p in pics) + "</div>"
 
 def stops(items):
-    return '<ol class="stops">' + "".join(f"<li><h4>{t}</h4><p>{d}</p></li>" for t, d in items) + "</ol>"
+    return '<ol class="stops">' + "".join(f"<li><h3>{t}</h3><p>{d}</p></li>" for t, d in items) + "</ol>"
 
 def ul(items):
     return "<ul>" + "".join(f"<li>{i}</li>" for i in items) + "</ul>"
@@ -237,7 +240,7 @@ def faq_block(items):
 
 # ---------------------------------------------------------------- HOME
 home = f"""
-<section class="hero" data-og="{img_jpg("samarkand1")}"><div class="hero-bg" style="background-image:url('{img("samarkand1","lg")}')"></div>
+<section class="hero" data-og="{img_jpg("samarkand1")}"><div class="hero-bg" style="--bg:url('{vimg("samarkand1","lg")}');--bgm:url('{vimg("samarkand1")}')"></div>
 <div class="wrap hero-in"><div class="eyebrow" style="color:#f5a623">Uzbek Travel · Tashkent</div>
 <h1>Discover the Real Uzbekistan</h1><p>Private and group tours led by local guides who love what they do.</p>
 <div class="hero-ctas"><a class="btn btn-orange" href="{{R}}tours/">Explore Our Tours</a><a class="btn btn-ghost" href="{{R}}guides/">Meet Our Guides</a></div></div></section>

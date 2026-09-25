@@ -145,7 +145,7 @@ def build():
                     v = el.get(a)
                     if v and "assets/" in v and not v.startswith(("http", "/", "mailto")): el[a] = "../" + v
                 if el.get("style") and "assets/" in el["style"]:
-                    el["style"] = re.sub(r"url\('(?!http)", "url('../", el["style"])
+                    el["style"] = re.sub(r"url\('(?!http|/)", "url('../", el["style"])
             can = s.find("link", rel="canonical")
             if can: can["href"] = f"{SITE}/{L}/{rel}"
             for m in s.find_all("meta", property="og:url"): m["content"] = f"{SITE}/{L}/{rel}"
