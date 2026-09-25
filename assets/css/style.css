@@ -280,3 +280,6 @@ a,button,.card,.tile,summary{cursor:pointer}
 .foot-bottom a{color:#dbeceb;text-decoration:underline}
 .cookie-settings{background:none;border:0;color:#dbeceb;text-decoration:underline;font:inherit;cursor:pointer;padding:0}
 .cookie-settings:hover,.foot-bottom a:hover{color:#fff}
+/* long words (e.g. Russian «Конфиденциальность») must wrap on phones instead of overflowing */
+h1,h2,h3{overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto}
+.prose a,.prose p{overflow-wrap:anywhere}
